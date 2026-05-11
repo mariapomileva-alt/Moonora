@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
+import { CoverOptionsSection } from "./cover-options-section";
 
 const languages = ["English", "Deutsch", "Français", "Español", "Italiano"];
 
@@ -268,6 +269,7 @@ export function LivePreviewSection() {
   const blurb = useMemo(() => getPreviewBlurb(name, age, language), [name, age, language]);
 
   return (
+    <>
     <section id="preview" className="relative scroll-mt-24 py-20 sm:py-28">
       <div className="absolute inset-0 bg-gradient-to-b from-night-950 via-night-900 to-night-950" />
 
@@ -402,6 +404,9 @@ export function LivePreviewSection() {
         </div>
       </div>
     </section>
+
+    <CoverOptionsSection photoUrl={photoUrl} name={name} />
+    </>
   );
 }
 
