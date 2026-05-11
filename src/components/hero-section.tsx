@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRef } from "react";
 import { FloatingParticles } from "./floating-particles";
 import heroMoonora from "@/images/hero-moonora.png";
-import { MoonoraLogo } from "./moonora-logo";
 import { StarsField } from "./stars-field";
 
 export function HeroSection() {
@@ -69,7 +68,6 @@ export function HeroSection() {
             transition={{ delay: 0.2, duration: 0.7 }}
             className="mb-5 flex flex-col items-center gap-2 lg:items-start"
           >
-            <MoonoraLogo size="md" />
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-gold/75">
               Where bedtime becomes magic
             </p>
