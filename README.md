@@ -1,3 +1,8 @@
+**Moonora** — personalized bedtime books landing (Next.js).  
+The public site at `https://mariapomileva-alt.github.io/Moonora/` is **not** this README: GitHub Pages must serve the built static files from the **`gh-pages`** branch. From this folder run `npm run deploy:github`, then in the repo go to **Settings → Pages** and set **Source** to branch **`gh-pages`** / **/(root)** (or use the GitHub Actions workflow in `.github/workflows/`).
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
