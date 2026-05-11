@@ -87,6 +87,93 @@ function getPreviewBlurb(
   return { line1: list[idx][0], line2: list[idx][1] };
 }
 
+/** Ornate “magic window” frame — stars + gold border + soft arch (cover option 2 style). */
+function MagicPhotoFrame({
+  children,
+  className = "",
+  size = "md",
+  interactive = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  /** md = form upload, lg = book mockup */
+  size?: "md" | "lg";
+  /** Subtle hover scale when wrapped in .group (upload zone) */
+  interactive?: boolean;
+}) {
+  const scale = size === "lg" ? "max-w-[11.5rem] sm:max-w-[12.5rem]" : "max-w-[13.5rem]";
+
+  return (
+    <div
+      className={`relative mx-auto w-full ${scale} ${interactive ? "transition-transform duration-300 will-change-transform group-hover:scale-[1.01]" : ""} ${className}`}
+    >
+      <div className="pointer-events-none absolute -inset-3 rounded-[2.25rem] bg-gold/20 blur-2xl opacity-60" aria-hidden />
+
+      <div className="pointer-events-none absolute inset-[3px] overflow-hidden rounded-[1.5rem] rounded-t-[2.35rem] bg-gradient-to-b from-[#1c3355] via-[#132742] to-[#0a1524]">
+        <div className="absolute inset-0 opacity-[0.55]">
+          {[
+            [12, 14],
+            [28, 22],
+            [88, 12],
+            [72, 28],
+            [55, 8],
+            [102, 18],
+            [44, 36],
+          ].map(([x, y], i) => (
+            <span
+              key={i}
+              className="absolute rounded-full bg-moon"
+              style={{
+                left: `${x}%`,
+                top: `${y}%`,
+                width: i % 3 === 0 ? 2 : 1,
+                height: i % 3 === 0 ? 2 : 1,
+                opacity: 0.25 + (i % 4) * 0.12,
+                boxShadow: "0 0 6px rgba(243,234,216,0.35)",
+              }}
+            />
+          ))}
+        </div>
+        <div className="absolute -right-8 top-4 h-20 w-28 rounded-full bg-white/[0.04] blur-2xl" />
+        <div className="absolute -left-6 bottom-8 h-16 w-24 rounded-full bg-gold/[0.06] blur-2xl" />
+      </div>
+
+      <div
+        className="relative rounded-[1.45rem] rounded-t-[2.2rem] p-[3px] shadow-[0_16px_48px_rgba(0,0,0,0.5)]"
+        style={{
+          background:
+            "linear-gradient(155deg, #e8d7a8 0%, #c9a962 38%, #a88b4a 55%, #d4c08a 100%)",
+        }}
+      >
+        <div className="relative overflow-hidden rounded-[1.3rem] rounded-t-[2.05rem] bg-[#0d1c2e]/95 ring-1 ring-black/40">
+          <div className={size === "lg" ? "aspect-[4/5] w-full min-h-[11.5rem] sm:min-h-[12.5rem]" : "aspect-[4/5] w-full min-h-[12.5rem]"}>
+            {children}
+          </div>
+        </div>
+      </div>
+
+      <svg
+        className="pointer-events-none absolute -left-0.5 top-0 z-10 h-9 w-9 text-gold/55"
+        viewBox="0 0 36 36"
+        fill="none"
+        aria-hidden
+      >
+        <path d="M8 28C8 10 12 6 22 4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+        <path d="M6 26c4-2 6-8 10-10" stroke="currentColor" strokeWidth="0.7" opacity="0.6" strokeLinecap="round" />
+      </svg>
+      <svg
+        className="pointer-events-none absolute -right-0.5 top-0 z-10 h-9 w-9 scale-x-[-1] text-gold/55"
+        viewBox="0 0 36 36"
+        fill="none"
+        aria-hidden
+      >
+        <path d="M8 28C8 10 12 6 22 4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+        <path d="M6 26c4-2 6-8 10-10" stroke="currentColor" strokeWidth="0.7" opacity="0.6" strokeLinecap="round" />
+      </svg>
+    </div>
+  );
+}
+
 function FairytaleCoverBackdrop() {
   return (
     <div
@@ -185,11 +272,36 @@ export function LivePreviewSection() {
             transition={{ duration: 0.65 }}
             className="rounded-3xl border border-white/[0.07] bg-night-800/30 p-6 sm:p-8 glass-subtle"
           >
-            <label className="block text-sm font-medium text-cream/80">Child’s photo</label>
-            <label className="mt-3 flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-cream/20 bg-night-950/50 px-4 py-10 transition hover:border-gold/35 hover:bg-night-900/40">
+            <p className="text-sm font-medium text-cream/80">Child’s photo</p>
+            <label className="group relative mt-4 block w-full cursor-pointer">
               <input type="file" accept="image/*" className="sr-only" onChange={onFile} />
-              <span className="text-sm text-cream/50">Drop or tap to upload</span>
-              <span className="mt-1 text-xs text-cream/35">JPG or PNG · private preview</span>
+              <MagicPhotoFrame size="md" interactive>
+                {photoUrl ? (
+                  <div className="relative h-full min-h-[inherit] w-full">
+                    <Image
+                      src={photoUrl}
+                      alt=""
+                      fill
+                      className="object-cover object-top"
+                      sizes="200px"
+                      unoptimized
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-950/90 to-transparent py-3 text-center">
+                      <span className="text-[10px] font-medium uppercase tracking-widest text-gold/90">
+                        Tap to replace
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex h-full min-h-[12.5rem] flex-col items-center justify-center gap-2 px-4 py-6 text-center">
+                    <span className="rounded-full border border-dashed border-gold/40 bg-night-950/40 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gold/80">
+                      Your portrait
+                    </span>
+                    <span className="text-sm text-cream/60">Drop or tap to upload</span>
+                    <span className="text-xs text-cream/38">JPG or PNG · private preview</span>
+                  </div>
+                )}
+              </MagicPhotoFrame>
             </label>
 
             <div className="mt-6 space-y-4">
@@ -312,33 +424,35 @@ function BookMockup({
               </p>
 
               <div className="mt-5 flex justify-center">
-                <div className="relative h-[5.75rem] w-[5.75rem] shrink-0 overflow-hidden rounded-full border-2 border-gold/45 bg-night-800/90 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-4 ring-black/30 ring-offset-2 ring-offset-[#142a45]/80 sm:h-24 sm:w-24">
+                <MagicPhotoFrame size="lg">
                   <AnimatePresence mode="wait">
                     {photoUrl ? (
                       <motion.div
                         key="img"
-                        initial={{ opacity: 0, scale: 1.05 }}
+                        initial={{ opacity: 0, scale: 1.03 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.35 }}
-                        className="relative h-full w-full"
+                        className="relative h-full min-h-[11.5rem] w-full sm:min-h-[12.5rem]"
                       >
-                        <Image src={photoUrl} alt="" fill sizes="120px" className="object-cover" unoptimized />
+                        <Image src={photoUrl} alt="" fill sizes="160px" className="object-cover object-top" unoptimized />
                       </motion.div>
                     ) : (
                       <motion.div
                         key="ph"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="flex h-full w-full items-center justify-center bg-gradient-to-b from-night-800 to-night-950"
+                        className="flex min-h-[11.5rem] w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-night-800/90 to-night-950 px-3 py-6 sm:min-h-[12.5rem]"
                       >
-                        <span className="px-3 text-center text-[9px] uppercase tracking-widest text-cream/35">
-                          Photo
+                        <span className="text-center text-[9px] uppercase leading-relaxed tracking-widest text-cream/40">
+                          Your photo
+                          <br />
+                          appears here
                         </span>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
+                </MagicPhotoFrame>
               </div>
 
               <motion.h3
