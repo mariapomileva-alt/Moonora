@@ -92,12 +92,12 @@ export function HeroSection() {
               <div className="relative h-14 w-11 shrink-0 rounded-sm bg-gradient-to-br from-night-700 to-night-800 shadow-lg ring-1 ring-gold/30">
                 <div className="absolute inset-1 rounded-[2px] bg-gradient-to-br from-[#2a4a6f] to-night-900" />
                 <span className="absolute inset-0 flex items-center justify-center font-serif text-[9px] font-medium leading-tight text-center text-cream/90 px-0.5">
-                  Kira in Wonderland
+                  Wonderland
                 </span>
               </div>
               <div className="text-left">
                 <p className="text-xs uppercase tracking-widest text-gold/80">Featured edition</p>
-                <p className="font-serif text-lg text-cream">“Kira in Wonderland”</p>
+                <p className="font-serif text-lg text-cream">Wonderland</p>
                 <p className="text-xs text-cream/50">Premium hardcover · 32 pages</p>
               </div>
             </div>

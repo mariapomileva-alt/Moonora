@@ -71,7 +71,7 @@ function IslandArt() {
 
 const stories = [
   {
-    title: "Kira in Wonderland",
+    title: "Wonderland",
     tagline: "A dream world beneath the moon",
     description:
       "Glowing forests, kind creatures, and a path of stardust — a gentle epic where courage fits in a whisper.",
