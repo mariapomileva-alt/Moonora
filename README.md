@@ -1,5 +1,4 @@
-**Moonora** — personalized bedtime books landing (Next.js).  
-The public site at `https://mariapomileva-alt.github.io/Moonora/` is **not** this README: GitHub Pages must serve the built static files from the **`gh-pages`** branch. From this folder run `npm run deploy:github`, then in the repo go to **Settings → Pages** and set **Source** to branch **`gh-pages`** / **/(root)** (or use the GitHub Actions workflow in `.github/workflows/`).
+**Опубликовать сайт на GitHub Pages:** `npm run pages:sync`, затем `git add docs && git commit -m \"Update docs\" && git push`. В репозитории: **Settings → Pages → Branch `main` / Folder `/docs`** (не `/ (root)` — иначе Jekyll покажет README вместо лендинга). Альтернатива: ветка `gh-pages` и команда `npm run deploy:github`, в Pages выбрать branch **gh-pages** / **/(root)**.
 
 ---
 
