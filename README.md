@@ -1,4 +1,6 @@
-**Опубликовать сайт на GitHub Pages:** `npm run pages:sync`, затем `git add docs && git commit -m \"Update docs\" && git push`. В репозитории: **Settings → Pages → Branch `main` / Folder `/docs`** (не `/ (root)` — иначе Jekyll покажет README вместо лендинга). Альтернатива: ветка `gh-pages` и команда `npm run deploy:github`, в Pages выбрать branch **gh-pages** / **/(root)**.
+**Если сайт «сломался» и снова виден README:** в корне репозитория лежат `index.html` (редирект на `docs/`) и `.nojekyll` (отключает Jekyll при публикации из `/(root)`). Лучше всё же в **Settings → Pages** выбрать **Branch `main` / Folder `/docs`** — тогда адрес будет без `/docs/` в пути.
+
+**Опубликовать сайт:** `npm run pages:sync`, затем `git add docs && git commit -m "Update docs" && git push`.
 
 ---
 
