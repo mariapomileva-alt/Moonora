@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
+import coverIllustratedPreview from "@/images/cover-moonora-full-illustration.png";
 import { CoverOptionsSection } from "./cover-options-section";
 
 const languages = ["English", "Deutsch", "Français", "Español", "Italiano"];
@@ -390,10 +391,10 @@ export function LivePreviewSection() {
             style={{ perspective: "1400px" }}
           >
             <p className="mb-3 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-gold/65">
-              Printed cover preview
+              Illustrated print preview
             </p>
             <BookMockup
-              photoUrl={photoUrl}
+              hasPhoto={Boolean(photoUrl)}
               title={coverTitle}
               age={age}
               language={language}
@@ -411,14 +412,14 @@ export function LivePreviewSection() {
 }
 
 function BookMockup({
-  photoUrl,
+  hasPhoto,
   title,
   age,
   language,
   line1,
   line2,
 }: {
-  photoUrl: string | null;
+  hasPhoto: boolean;
   title: string;
   age: string;
   language: string;
@@ -476,39 +477,31 @@ function BookMockup({
 
               <div className="flex justify-center pt-2">
                 <CoverPrintedFrame>
-                  <AnimatePresence mode="wait">
-                    {photoUrl ? (
-                      <motion.div
-                        key="img"
-                        initial={{ opacity: 0, scale: 1.02 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.35 }}
-                        className="relative h-full min-h-[13rem] w-full sm:min-h-[14rem]"
-                      >
-                        <Image
-                          src={photoUrl}
-                          alt=""
-                          fill
-                          sizes="180px"
-                          className="object-cover object-top"
-                          unoptimized
-                        />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="ph"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex min-h-[13rem] w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-[#1a3050]/90 to-night-950 px-4 py-8 sm:min-h-[14rem]"
-                      >
-                        <span className="font-serif text-sm italic text-cream/45">Portrait on cover</span>
-                        <span className="text-center text-[10px] uppercase tracking-[0.2em] text-cream/30">
-                          Add a photo in the editor
+                  <div className="relative h-full min-h-[13rem] w-full overflow-hidden sm:min-h-[14rem]">
+                    <Image
+                      src={coverIllustratedPreview}
+                      alt=""
+                      fill
+                      sizes="200px"
+                      className="object-cover object-[center_38%] scale-[1.08]"
+                      priority={false}
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-night-950/75 via-night-950/15 to-night-950/25" />
+                    <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.35)]" />
+                    {hasPhoto ? (
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-950/90 to-transparent px-3 py-2.5 text-center">
+                        <span className="text-[9px] font-medium uppercase tracking-[0.18em] text-gold/85">
+                          Photo on file — painted for print
                         </span>
-                      </motion.div>
+                      </div>
+                    ) : (
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-950/90 to-transparent px-3 py-2.5 text-center">
+                        <span className="text-[9px] font-medium uppercase tracking-[0.18em] text-cream/45">
+                          Upload photo — we illustrate the hero
+                        </span>
+                      </div>
                     )}
-                  </AnimatePresence>
+                  </div>
                 </CoverPrintedFrame>
               </div>
 
