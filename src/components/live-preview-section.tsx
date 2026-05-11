@@ -174,6 +174,32 @@ function MagicPhotoFrame({
   );
 }
 
+/** Printed cover portrait — gold arch only, no “editor” stars / glow (option 2, book side). */
+function CoverPrintedFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative mx-auto w-[13.25rem] sm:w-[14.25rem]">
+      <div
+        className="relative rounded-[1.38rem] rounded-t-[2.08rem] p-[2px] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_14px_40px_rgba(0,0,0,0.5)]"
+        style={{
+          background: "linear-gradient(158deg, #f2e6c8 0%, #d4b87a 32%, #b89652 58%, #e4cf8a 100%)",
+        }}
+      >
+        <div className="relative overflow-hidden rounded-[1.28rem] rounded-t-[1.98rem] bg-gradient-to-b from-[#142a45] to-[#070f18] p-[1px] ring-1 ring-black/50">
+          <div className="relative overflow-hidden rounded-[1.22rem] rounded-t-[1.92rem] bg-gradient-to-b from-night-800/80 to-night-950">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-night-950/40" />
+            <div className="relative aspect-[4/5] w-full min-h-[13rem] sm:min-h-[14rem]">{children}</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-2.5 flex justify-center gap-1.5 opacity-50" aria-hidden>
+        <span className="h-1 w-1 rounded-full bg-gold" />
+        <span className="h-1 w-1 rounded-full bg-gold" />
+        <span className="h-1 w-1 rounded-full bg-gold" />
+      </div>
+    </div>
+  );
+}
+
 function FairytaleCoverBackdrop() {
   return (
     <div
@@ -183,11 +209,6 @@ function FairytaleCoverBackdrop() {
       <div className="absolute inset-0 bg-gradient-to-b from-[#243d62] via-[#142a45] to-[#070f1c]" />
       {/* Mist */}
       <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#0a1628]/90 via-transparent to-transparent" />
-      {/* Moon glow */}
-      <div className="absolute -right-6 -top-8 h-36 w-36 rounded-full bg-moon/25 blur-3xl" />
-      <div className="absolute right-4 top-5 h-14 w-14 rounded-full bg-gradient-to-br from-moon to-cream-soft opacity-[0.92] shadow-[0_0_40px_rgba(243,234,216,0.35)]" />
-      <div className="absolute right-6 top-7 h-11 w-11 rounded-full bg-night-900/25" />
-
       <svg className="absolute inset-0 h-full w-full opacity-[0.55]" viewBox="0 0 320 400" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="pvTrees" x1="0" y1="0" x2="0" y2="1">
@@ -273,7 +294,10 @@ export function LivePreviewSection() {
             className="rounded-3xl border border-white/[0.07] bg-night-800/30 p-6 sm:p-8 glass-subtle"
           >
             <p className="text-sm font-medium text-cream/80">Child’s photo</p>
-            <label className="group relative mt-4 block w-full cursor-pointer">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cream/35">
+              Upload · not the printed cover
+            </p>
+            <label className="group relative mt-1 block w-full cursor-pointer">
               <input type="file" accept="image/*" className="sr-only" onChange={onFile} />
               <MagicPhotoFrame size="md" interactive>
                 {photoUrl ? (
@@ -363,6 +387,9 @@ export function LivePreviewSection() {
             className="flex flex-col items-center justify-center lg:pt-4"
             style={{ perspective: "1400px" }}
           >
+            <p className="mb-3 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-gold/65">
+              Printed cover preview
+            </p>
             <BookMockup
               photoUrl={photoUrl}
               title={coverTitle}
@@ -418,46 +445,71 @@ function BookMockup({
 
             <div className="absolute bottom-0 left-0 top-0 w-3 bg-gradient-to-r from-black/40 to-transparent" />
 
-            <div className="relative z-10 flex min-h-[420px] flex-col px-5 pb-6 pt-6 sm:min-h-[440px] sm:px-6 sm:pb-7 sm:pt-7">
-              <p className="text-center text-[9px] font-semibold uppercase tracking-[0.35em] text-gold/90">
-                Moonora
-              </p>
+            <div className="relative z-10 flex min-h-[420px] flex-col px-5 pb-6 pt-5 sm:min-h-[460px] sm:px-6 sm:pb-7 sm:pt-6">
+              {/* Printed cover masthead — not the upload editor */}
+              <div className="relative mb-1 flex h-9 shrink-0 items-center justify-center">
+                <svg
+                  className="pointer-events-none absolute left-0 top-1 h-8 w-10 text-gold/45"
+                  viewBox="0 0 40 32"
+                  fill="none"
+                  aria-hidden
+                >
+                  <path d="M4 6v18M4 6h18" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" />
+                </svg>
+                <p className="text-center text-[9px] font-semibold uppercase tracking-[0.42em] text-gold/95">
+                  Moonora
+                </p>
+                <div
+                  className="pointer-events-none absolute right-0 top-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-night-950/50 ring-1 ring-gold/25"
+                  aria-hidden
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-moon" fill="currentColor">
+                    <path d="M18.5 12.5c0 4.5-3.5 8.5-8 9.5 3-1.5 5-5 5-9 0-4-2-7.5-5-9 4.5 1 8 4.5 8 8.5z" opacity="0.95" />
+                  </svg>
+                </div>
+              </div>
 
-              <div className="mt-5 flex justify-center">
-                <MagicPhotoFrame size="lg">
+              <div className="flex justify-center pt-2">
+                <CoverPrintedFrame>
                   <AnimatePresence mode="wait">
                     {photoUrl ? (
                       <motion.div
                         key="img"
-                        initial={{ opacity: 0, scale: 1.03 }}
+                        initial={{ opacity: 0, scale: 1.02 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.35 }}
-                        className="relative h-full min-h-[11.5rem] w-full sm:min-h-[12.5rem]"
+                        className="relative h-full min-h-[13rem] w-full sm:min-h-[14rem]"
                       >
-                        <Image src={photoUrl} alt="" fill sizes="160px" className="object-cover object-top" unoptimized />
+                        <Image
+                          src={photoUrl}
+                          alt=""
+                          fill
+                          sizes="180px"
+                          className="object-cover object-top"
+                          unoptimized
+                        />
                       </motion.div>
                     ) : (
                       <motion.div
                         key="ph"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="flex min-h-[11.5rem] w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-night-800/90 to-night-950 px-3 py-6 sm:min-h-[12.5rem]"
+                        className="flex min-h-[13rem] w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-[#1a3050]/90 to-night-950 px-4 py-8 sm:min-h-[14rem]"
                       >
-                        <span className="text-center text-[9px] uppercase leading-relaxed tracking-widest text-cream/40">
-                          Your photo
-                          <br />
-                          appears here
+                        <span className="font-serif text-sm italic text-cream/45">Portrait on cover</span>
+                        <span className="text-center text-[10px] uppercase tracking-[0.2em] text-cream/30">
+                          Add a photo in the editor
                         </span>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </MagicPhotoFrame>
+                </CoverPrintedFrame>
               </div>
 
               <motion.h3
                 layout
-                className="mt-5 text-center font-serif text-[1.2rem] leading-[1.2] tracking-tight text-cream drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-[1.35rem]"
+                className="mt-6 text-center font-serif text-[1.28rem] leading-[1.15] tracking-tight text-cream drop-shadow-[0_2px_14px_rgba(0,0,0,0.55)] sm:text-[1.42rem]"
               >
                 {title}
               </motion.h3>
@@ -469,12 +521,12 @@ function BookMockup({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.35 }}
-                  className="mt-4 space-y-2 px-0.5"
+                  className="mt-4 space-y-2.5 px-0.5"
                 >
-                  <p className="text-center font-serif text-[0.8125rem] italic leading-snug text-cream/85 sm:text-sm">
+                  <p className="text-center font-serif text-[0.8125rem] italic leading-relaxed text-cream/90 sm:text-[0.9rem]">
                     {line1}
                   </p>
-                  <p className="text-center text-[11px] leading-relaxed text-cream/60 sm:text-xs">{line2}</p>
+                  <p className="text-center text-[11px] leading-relaxed text-cream/58 sm:text-xs">{line2}</p>
                 </motion.div>
               </AnimatePresence>
 
