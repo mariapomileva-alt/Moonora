@@ -1,9 +1,10 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 import { useRef } from "react";
 import { FloatingParticles } from "./floating-particles";
-import { HeroIllustration } from "./hero-illustration";
+import { MoonoraLogo } from "./moonora-logo";
 import { StarsField } from "./stars-field";
 
 export function HeroSection() {
@@ -35,18 +36,21 @@ export function HeroSection() {
         className="relative z-10 mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16"
       >
         <div className="order-2 text-center lg:order-1 lg:text-left">
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.7 }}
-            className="mb-4 text-xs font-semibold uppercase tracking-[0.35em] text-gold/90"
+            className="mb-5 flex flex-col items-center gap-2 lg:items-start"
           >
-            Moonora
-          </motion.p>
+            <MoonoraLogo size="md" />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-gold/75">
+              Where bedtime becomes magic
+            </p>
+          </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.28, duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ delay: 0.28, duration: 0.85, ease: [0.22, 1, 0.36, 1] as const }}
             className="font-serif text-[2.1rem] font-medium leading-[1.12] tracking-tight text-cream sm:text-5xl lg:text-[3.25rem]"
           >
             Turn your child into the{" "}
@@ -104,9 +108,28 @@ export function HeroSection() {
           </motion.div>
         </div>
 
-        <div className="order-1 lg:order-2">
-          <HeroIllustration />
-        </div>
+        <motion.div
+          className="order-1 lg:order-2"
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.1, ease: [0.22, 1, 0.36, 1] as const }}
+        >
+          <div className="relative mx-auto max-w-xl lg:max-w-none">
+            <div className="relative overflow-hidden rounded-[1.75rem] shadow-[0_40px_100px_-24px_rgba(0,0,0,0.85)] ring-1 ring-white/12">
+              <Image
+                src="/hero-moonora.png"
+                alt="A child in bed at night, reading a glowing Moonora storybook — moonlight, stars, and a cozy bedroom"
+                width={1024}
+                height={786}
+                priority
+                className="h-auto w-full object-cover object-center"
+                sizes="(max-width: 1024px) 100vw, 48vw"
+              />
+              <div className="pointer-events-none absolute inset-0 rounded-[1.75rem] ring-1 ring-inset ring-white/[0.06]" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-night-950/50 to-transparent" />
+            </div>
+          </div>
+        </motion.div>
       </motion.div>
 
       <motion.div
