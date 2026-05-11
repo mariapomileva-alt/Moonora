@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { useRef } from "react";
 import { FloatingParticles } from "./floating-particles";
+import heroMoonora from "@/images/hero-moonora.png";
 import { MoonoraLogo } from "./moonora-logo";
 import { StarsField } from "./stars-field";
 
@@ -117,7 +118,7 @@ export function HeroSection() {
           <div className="relative mx-auto max-w-xl lg:max-w-none">
             <div className="relative overflow-hidden rounded-[1.75rem] shadow-[0_40px_100px_-24px_rgba(0,0,0,0.85)] ring-1 ring-white/12">
               <Image
-                src="/hero-moonora.png"
+                src={heroMoonora}
                 alt="A child in bed at night, reading a glowing Moonora storybook — moonlight, stars, and a cozy bedroom"
                 width={1024}
                 height={786}
