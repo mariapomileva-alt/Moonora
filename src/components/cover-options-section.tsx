@@ -2,22 +2,26 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Image, { type StaticImageData } from "next/image";
-import { useEffect, useState } from "react";
 
 import coverFull from "@/images/cover-moonora-full-illustration.png";
 import coverFrame from "@/images/cover-moonora-magic-frame.png";
 import coverSilhouette from "@/images/cover-moonora-silhouette.png";
+import type { AiPipelinePhase } from "@/lib/cover-ai";
 
-/** Full-bleed cinematic cover art + post-grade (no vector characters). */
+/** Full-bleed cinematic cover art + post-grade (raster URL or bundled asset). */
 function CinematicCoverArt({
   src,
   transforming,
+  phaseLabel,
   objectPosition = "center 45%",
 }: {
-  src: StaticImageData;
+  src: StaticImageData | string;
   transforming: boolean;
+  /** Shown on loading overlay */
+  phaseLabel?: string;
   objectPosition?: string;
 }) {
+  const isData = typeof src === "string";
   return (
     <div className="absolute inset-0 z-0 overflow-hidden">
       <motion.div
@@ -33,6 +37,7 @@ function CinematicCoverArt({
           className="object-cover"
           style={{ objectPosition }}
           priority={false}
+          unoptimized={isData}
         />
       </motion.div>
 
@@ -117,8 +122,8 @@ function CinematicCoverArt({
               animate={{ rotate: 360 }}
               transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
             />
-            <p className="mt-3 text-[8px] font-semibold uppercase tracking-[0.28em] text-[#c9a962]/90">
-              Painting your cover…
+            <p className="mt-3 max-w-[11rem] text-center text-[8px] font-semibold uppercase leading-relaxed tracking-[0.22em] text-[#c9a962]/90">
+              {phaseLabel || "Painting your cover…"}
             </p>
           </motion.div>
         )}
@@ -138,6 +143,7 @@ function CoverCard({
   coverSrc,
   objectPosition,
   transforming,
+  phaseLabel,
   delay = 0,
 }: {
   title: string;
@@ -147,9 +153,10 @@ function CoverCard({
   bullets: string[];
   selected: boolean;
   onSelect: () => void;
-  coverSrc: StaticImageData;
+  coverSrc: StaticImageData | string;
   objectPosition?: string;
   transforming: boolean;
+  phaseLabel?: string;
   delay?: number;
 }) {
   return (
@@ -181,7 +188,12 @@ function CoverCard({
             }}
           >
             <div className="relative overflow-hidden rounded-r-[1.1rem] rounded-l-[2px]" style={{ minHeight: 290 }}>
-              <CinematicCoverArt src={coverSrc} transforming={transforming} objectPosition={objectPosition} />
+              <CinematicCoverArt
+                src={coverSrc}
+                transforming={transforming}
+                phaseLabel={phaseLabel}
+                objectPosition={objectPosition}
+              />
 
               {/* Stronger film grain for painterly feel */}
               <div
@@ -268,24 +280,34 @@ function CoverCard({
   );
 }
 
-export function CoverOptionsSection({ photoUrl, name }: { photoUrl: string | null; name: string }) {
-  const [selected, setSelected] = useState<0 | 1 | 2>(0);
-  const [transforming, setTransforming] = useState(false);
+export function CoverOptionsSection({
+  name,
+  coverStyleIndex,
+  onCoverStyleChange,
+  aiCovers,
+  aiPhase,
+  aiError,
+  hasPhoto,
+  aiEnabled,
+}: {
+  name: string;
+  coverStyleIndex: 0 | 1 | 2;
+  onCoverStyleChange: (i: 0 | 1 | 2) => void;
+  aiCovers: [string | null, string | null, string | null];
+  aiPhase: AiPipelinePhase;
+  aiError: string | null;
+  hasPhoto: boolean;
+  /** OPENAI pipeline available (API base URL set) */
+  aiEnabled: boolean;
+}) {
   const title = name.trim() ? `${name.trim()} and the Moon Forest` : "The Moon Forest";
-
-  useEffect(() => {
-    if (!photoUrl) return;
-    setTransforming(true);
-    const t = setTimeout(() => setTransforming(false), 2400);
-    return () => clearTimeout(t);
-  }, [photoUrl]);
 
   const covers: {
     optionLabel: string;
     badge?: string;
     description: string;
     bullets: string[];
-    src: StaticImageData;
+    fallback: StaticImageData;
     objectPosition: string;
   }[] = [
     {
@@ -298,7 +320,7 @@ export function CoverOptionsSection({ photoUrl, name }: { photoUrl: string | nul
         "Layered forest depth, moonlight, and particles",
         "Your photo is reference only for likeness",
       ],
-      src: coverFull,
+      fallback: coverFull,
       objectPosition: "center 42%",
     },
     {
@@ -310,7 +332,7 @@ export function CoverOptionsSection({ photoUrl, name }: { photoUrl: string | nul
         "Warm candlelight + cool moon cross-light",
         "Gold architectural frame as part of the painting",
       ],
-      src: coverFrame,
+      fallback: coverFrame,
       objectPosition: "center 38%",
     },
     {
@@ -322,10 +344,24 @@ export function CoverOptionsSection({ photoUrl, name }: { photoUrl: string | nul
         "Mysterious, elegant, story-forward composition",
         "Silhouette derived from reference, fully illustrated",
       ],
-      src: coverSilhouette,
+      fallback: coverSilhouette,
       objectPosition: "center 48%",
     },
   ];
+
+  const phaseLabelForCard = (i: 0 | 1 | 2) => {
+    if (coverStyleIndex !== i) return undefined;
+    if (aiPhase === "portrait") return "Illustrating your child…";
+    if (aiPhase === "cover") return "Creating the magical cover…";
+    return undefined;
+  };
+
+  const cardTransforming = (i: 0 | 1 | 2) =>
+    aiEnabled &&
+    hasPhoto &&
+    coverStyleIndex === i &&
+    (aiPhase === "portrait" || aiPhase === "cover") &&
+    !aiCovers[i];
 
   return (
     <section className="relative py-20 sm:py-28">
@@ -349,12 +385,14 @@ export function CoverOptionsSection({ photoUrl, name }: { photoUrl: string | nul
             How should your child appear on the cover?
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-[#f3ead8]/48 sm:text-[0.95rem]">
-            These are premium painted-cover directions — cinematic children&apos;s publishing, not templates. Your upload is used only as a likeness reference; the printed cover is fully illustrated and art-directed.
+            {aiEnabled
+              ? "OpenAI generates a painted portrait from your photo, then a full cover for each style you select — the raw upload never appears on the cover."
+              : "These are premium painted-cover directions. Enable the local cover API (see dev command) for live OpenAI generation from your upload."}
           </p>
         </motion.div>
 
         <AnimatePresence>
-          {photoUrl && transforming && (
+          {hasPhoto && aiEnabled && (aiPhase === "portrait" || aiPhase === "cover") && (
             <motion.div
               key="notice"
               initial={{ opacity: 0, y: 10, scale: 0.97 }}
@@ -370,30 +408,49 @@ export function CoverOptionsSection({ photoUrl, name }: { photoUrl: string | nul
                   transition={{ duration: 1.2, repeat: Infinity }}
                 />
                 <p className="text-left text-xs leading-relaxed text-[#f3ead8]/72">
-                  Translating your photo into a <span className="text-[#c9a962]/90">painted cinematic cover</span> — lighting, likeness, and world are merged in studio (never a raw crop on print).
+                  {aiPhase === "portrait" ? (
+                    <>
+                      <span className="text-[#c9a962]/90">Illustrating your child…</span> — turning your photo into a cinematic painted character (reference only).
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[#c9a962]/90">Creating the magical cover…</span> — placing your illustrated hero into the Moonora world.
+                    </>
+                  )}
                 </p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {aiError && (
+          <p className="mx-auto mt-6 max-w-lg rounded-xl border border-red-500/30 bg-red-950/30 px-4 py-3 text-center text-xs text-red-200/90">
+            {aiError}
+          </p>
+        )}
+
         <div className="mt-14 grid gap-12 sm:grid-cols-3 sm:gap-5 lg:gap-8">
-          {covers.map((c, i) => (
-            <CoverCard
-              key={i}
-              title={title}
-              optionLabel={c.optionLabel}
-              badge={c.badge}
-              description={c.description}
-              bullets={c.bullets}
-              selected={selected === i}
-              onSelect={() => setSelected(i as 0 | 1 | 2)}
-              coverSrc={c.src}
-              objectPosition={c.objectPosition}
-              delay={i * 0.13}
-              transforming={transforming}
-            />
-          ))}
+          {covers.map((c, i) => {
+            const idx = i as 0 | 1 | 2;
+            const src = aiCovers[idx] ?? c.fallback;
+            return (
+              <CoverCard
+                key={i}
+                title={title}
+                optionLabel={c.optionLabel}
+                badge={c.badge}
+                description={c.description}
+                bullets={c.bullets}
+                selected={coverStyleIndex === idx}
+                onSelect={() => onCoverStyleChange(idx)}
+                coverSrc={src}
+                objectPosition={c.objectPosition}
+                delay={i * 0.13}
+                transforming={cardTransforming(idx)}
+                phaseLabel={phaseLabelForCard(idx)}
+              />
+            );
+          })}
         </div>
 
         <motion.div
@@ -413,7 +470,7 @@ export function CoverOptionsSection({ photoUrl, name }: { photoUrl: string | nul
             <span>
               <span className="font-medium text-[#f3ead8]/85">Our recommendation: </span>
               Choose <span className="text-[#c9a962]">Full illustration</span> for maximum magic and immersion. Choose{" "}
-              <span className="text-[#c9a962]">Magic portrait frame</span> if you want a painted likeness that still reads clearly as your child — still fully illustrated, never a pasted photo.
+              <span className="text-[#c9a962]">Magic portrait frame</span> for a painted likeness that still reads clearly as your child — fully illustrated, never a pasted photo.
             </span>
           </p>
         </motion.div>

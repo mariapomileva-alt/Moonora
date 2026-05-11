@@ -2,11 +2,19 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import coverIllustratedPreview from "@/images/cover-moonora-full-illustration.png";
+import {
+  type CoverStyle,
+  isCoverAiConfigured,
+  requestCoverFinal,
+  requestPortraitTransform,
+} from "@/lib/cover-ai";
 import { CoverOptionsSection } from "./cover-options-section";
 
 const languages = ["English", "Deutsch", "Français", "Español", "Italiano"];
+
+const COVER_STYLES: CoverStyle[] = ["full", "frame", "silhouette"];
 
 function getPreviewBlurb(
   name: string,
@@ -252,6 +260,17 @@ export function LivePreviewSection() {
   const [age, setAge] = useState("5");
   const [language, setLanguage] = useState("English");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [coverStyleIndex, setCoverStyleIndex] = useState<0 | 1 | 2>(0);
+  const [aiPortrait, setAiPortrait] = useState<string | null>(null);
+  const [aiCovers, setAiCovers] = useState<[string | null, string | null, string | null]>([
+    null,
+    null,
+    null,
+  ]);
+  const [aiPhase, setAiPhase] = useState<"idle" | "portrait" | "cover" | "done" | "error">("idle");
+  const [aiError, setAiError] = useState<string | null>(null);
+  const portraitCacheRef = useRef<string | null>(null);
 
   const onFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -261,6 +280,12 @@ export function LivePreviewSection() {
       if (prev) URL.revokeObjectURL(prev);
       return url;
     });
+    setPhotoFile(f);
+    portraitCacheRef.current = null;
+    setAiPortrait(null);
+    setAiCovers([null, null, null]);
+    setAiPhase("idle");
+    setAiError(null);
   }, []);
 
   const coverTitle = useMemo(
@@ -268,6 +293,63 @@ export function LivePreviewSection() {
     [name]
   );
   const blurb = useMemo(() => getPreviewBlurb(name, age, language), [name, age, language]);
+
+  const [coverAiAvailable, setCoverAiAvailable] = useState(false);
+  useEffect(() => {
+    setCoverAiAvailable(isCoverAiConfigured());
+  }, []);
+
+  useEffect(() => {
+    if (!coverAiAvailable || !photoFile) return;
+    const idx = coverStyleIndex;
+    if (aiCovers[idx]) return;
+
+    const ac = new AbortController();
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setAiError(null);
+        let portraitUrl = portraitCacheRef.current;
+        if (!portraitUrl) {
+          if (cancelled) return;
+          setAiPhase("portrait");
+          const p = await requestPortraitTransform(photoFile, {
+            childName: name,
+            age,
+            signal: ac.signal,
+          });
+          if (cancelled) return;
+          portraitUrl = p.portrait;
+          portraitCacheRef.current = portraitUrl;
+          setAiPortrait(portraitUrl);
+        }
+        if (cancelled) return;
+        setAiPhase("cover");
+        const fin = await requestCoverFinal(portraitUrl, {
+          coverStyle: COVER_STYLES[idx],
+          childName: name,
+          signal: ac.signal,
+        });
+        if (cancelled) return;
+        setAiCovers((prev) => {
+          const n = [...prev] as [string | null, string | null, string | null];
+          n[idx] = fin.cover;
+          return n;
+        });
+        setAiPhase("done");
+      } catch (err: unknown) {
+        if (ac.signal.aborted || cancelled) return;
+        setAiPhase("error");
+        setAiError(err instanceof Error ? err.message : "Generation failed");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [coverAiAvailable, photoFile, coverStyleIndex, name, age, aiCovers]);
 
   return (
     <>
@@ -298,27 +380,59 @@ export function LivePreviewSection() {
           >
             <p className="text-sm font-medium text-cream/80">Child’s photo</p>
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cream/35">
-              Upload · not the printed cover
+              {coverAiAvailable ? "Upload · we illustrate (OpenAI)" : "Upload · local preview"}
             </p>
             <label className="group relative mt-1 block w-full cursor-pointer">
               <input type="file" accept="image/*" className="sr-only" onChange={onFile} />
               <MagicPhotoFrame size="md" interactive>
                 {photoUrl ? (
-                  <div className="relative h-full min-h-[inherit] w-full">
-                    <Image
-                      src={photoUrl}
-                      alt=""
-                      fill
-                      className="object-cover object-top"
-                      sizes="200px"
-                      unoptimized
-                    />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-950/90 to-transparent py-3 text-center">
-                      <span className="text-[10px] font-medium uppercase tracking-widest text-gold/90">
-                        Tap to replace
-                      </span>
+                  coverAiAvailable ? (
+                    aiPortrait ? (
+                      <div className="relative h-full min-h-[inherit] w-full">
+                        <Image
+                          src={aiPortrait}
+                          alt=""
+                          fill
+                          className="object-cover object-top"
+                          sizes="200px"
+                          unoptimized
+                        />
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-950/90 to-transparent py-3 text-center">
+                          <span className="text-[10px] font-medium uppercase tracking-widest text-gold/90">
+                            Illustrated hero · tap to replace
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex h-full min-h-[12.5rem] flex-col items-center justify-center gap-3 px-4 py-6 text-center">
+                        <motion.div
+                          className="h-10 w-10 rounded-full border border-gold/50 border-t-cream"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+                        />
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold/85">
+                          Illustrating your child…
+                        </span>
+                        <span className="text-xs text-cream/45">Original photo is not shown here by design.</span>
+                      </div>
+                    )
+                  ) : (
+                    <div className="relative h-full min-h-[inherit] w-full">
+                      <Image
+                        src={photoUrl}
+                        alt=""
+                        fill
+                        className="object-cover object-top"
+                        sizes="200px"
+                        unoptimized
+                      />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-950/90 to-transparent py-3 text-center">
+                        <span className="text-[10px] font-medium uppercase tracking-widest text-gold/90">
+                          Tap to replace
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )
                 ) : (
                   <div className="flex h-full min-h-[12.5rem] flex-col items-center justify-center gap-2 px-4 py-6 text-center">
                     <span className="rounded-full border border-dashed border-gold/40 bg-night-950/40 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-gold/80">
@@ -378,7 +492,9 @@ export function LivePreviewSection() {
               </div>
             </div>
             <p className="mt-5 text-xs leading-relaxed text-cream/40">
-              Stylized mock preview — final art is hand-finished in our studio (no AI on this screen).
+              {coverAiAvailable
+                ? "With the cover API running, your upload is sent securely to OpenAI for illustration only — it never appears as a raw crop on the cover."
+                : "Static preview mode: run npm run dev to start the local OpenAI cover server (see package.json)."}
             </p>
           </motion.div>
 
@@ -394,6 +510,7 @@ export function LivePreviewSection() {
               Illustrated print preview
             </p>
             <BookMockup
+              coverArtSrc={aiCovers[coverStyleIndex]}
               hasPhoto={Boolean(photoUrl)}
               title={coverTitle}
               age={age}
@@ -406,12 +523,22 @@ export function LivePreviewSection() {
       </div>
     </section>
 
-    <CoverOptionsSection photoUrl={photoUrl} name={name} />
+    <CoverOptionsSection
+      name={name}
+      coverStyleIndex={coverStyleIndex}
+      onCoverStyleChange={setCoverStyleIndex}
+      aiCovers={aiCovers}
+      aiPhase={aiPhase}
+      aiError={aiError}
+      hasPhoto={Boolean(photoUrl)}
+      aiEnabled={coverAiAvailable}
+    />
     </>
   );
 }
 
 function BookMockup({
+  coverArtSrc,
   hasPhoto,
   title,
   age,
@@ -419,6 +546,7 @@ function BookMockup({
   line1,
   line2,
 }: {
+  coverArtSrc: string | null;
   hasPhoto: boolean;
   title: string;
   age: string;
@@ -479,19 +607,20 @@ function BookMockup({
                 <CoverPrintedFrame>
                   <div className="relative h-full min-h-[13rem] w-full overflow-hidden sm:min-h-[14rem]">
                     <Image
-                      src={coverIllustratedPreview}
+                      src={coverArtSrc ?? coverIllustratedPreview}
                       alt=""
                       fill
                       sizes="200px"
                       className="object-cover object-[center_38%] scale-[1.08]"
                       priority={false}
+                      unoptimized={Boolean(coverArtSrc)}
                     />
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-night-950/75 via-night-950/15 to-night-950/25" />
                     <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.35)]" />
                     {hasPhoto ? (
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-950/90 to-transparent px-3 py-2.5 text-center">
                         <span className="text-[9px] font-medium uppercase tracking-[0.18em] text-gold/85">
-                          Photo on file — painted for print
+                          {coverArtSrc ? "AI illustrated cover" : "Photo on file — illustrated for print"}
                         </span>
                       </div>
                     ) : (
