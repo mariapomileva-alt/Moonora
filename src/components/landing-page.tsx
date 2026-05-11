@@ -7,6 +7,7 @@ import { FinalCtaSection } from "./final-cta-section";
 import { HeroSection } from "./hero-section";
 import { HowItWorksSection } from "./how-it-works-section";
 import { LivePreviewSection } from "./live-preview-section";
+import { MoonoraLogo } from "./moonora-logo";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { StorySelectionSection } from "./story-selection-section";
@@ -52,7 +53,7 @@ export function LandingPage() {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
               />
-              <p className="font-serif text-lg tracking-wide text-cream/70">Moonora</p>
+              <MoonoraLogo size="sm" className="opacity-90" />
             </motion.div>
           </motion.div>
         )}
